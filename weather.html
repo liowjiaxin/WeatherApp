@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+        .card {
+            width: 300px;
+            padding: 20px;
+            text-align: center;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background: white;
+        }
+        .search {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .search-bar {
+            padding: 8px;
+            width: 70%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #007BFF;
+            border: none;
+            border-radius: 5px;
+            padding: 5px;
+            cursor: pointer;
+        }
+        button img {
+            width: 20px;
+        }
+        .weather img {
+            width: 60px;
+            margin-top: 10px;
+        }
+        .weather h1 {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="search">
+            <input type="text" id="search-bar" placeholder="Enter City Name" spellcheck="false">
+            <button onclick="getWeatherByCity()"><img src="search-icon.png" alt="Search"></button>
+        </div>
+
+        <div class="weather">
+            <h2 class="city">City Name</h2>
+            <img id="weather-icon" src="" alt="Weather Icon">
+            <h1 class="temp">--°C</h1>
+            <p class="desc">Weather Description</p>
+            <p>Humidity: <span class="humidity">--%</span></p>
+            <p>Wind Speed: <span class="wind-speed">-- km/h</span></p>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = "put-your-api-key-here"; // Replace with your OpenWeather API key
+        const apiURL = "https://api.openweathermap.org/data/2.5/weather?units=metric&appid=" + apiKey;
+
+        async function fetchWeather(url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("Weather data not found");
+                const data = await response.json();
+                updateWeatherUI(data);
+            } catch (error) {
+                console.error("Error fetching weather data:", error);
+                alert("Could not fetch weather data. Please try again.");
+            }
+        }
+
+        function updateWeatherUI(data) {
+            document.querySelector(".city").innerText = data.name;
+            document.querySelector(".temp").innerText = Math.round(data.main.temp) + "°C";
+            document.querySelector(".desc").innerText = data.weather[0].description;
+            document.querySelector(".humidity").innerText = data.main.humidity + "%";
+            document.querySelector(".wind-speed").innerText = data.wind.speed + " km/h";
+            document.getElementById("weather-icon").src = "https://openweathermap.org/img/wn/" + data.weather[0].icon + "@2x.png";
+        }
+
+        function getWeatherByCity() {
+            const city = document.getElementById("search-bar").value.trim();
+            if (city) {
+                fetchWeather(`${apiURL}&q=${city}`);
+            } else {
+                alert("Please enter a city name.");
+            }
+        }
+
+        function getWeatherByLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        fetchWeather(`${apiURL}&lat=${latitude}&lon=${longitude}`);
+                    },
+                    () => {
+                        alert("Location access denied. Please search by city.");
+                    }
+                );
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+
+        // Fetch weather on page load using user's location
+        window.onload = getWeatherByLocation;
+    </script>
+
+</body>
+</html>
